@@ -109,6 +109,11 @@ public class CatalogManagement {
         System.out.print("Enter item description: ");
         String description = scanner.nextLine().trim();
 
+        if (id.trim().isEmpty() || name.trim().isEmpty() || description.trim().isEmpty()) {
+            System.out.println("ERROR: All fields are required.");
+            return;
+        }
+
         catalog.add(new Item(id, name, description));
         System.out.println("Item added successfully.");
     }
