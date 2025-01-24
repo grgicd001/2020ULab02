@@ -1,4 +1,4 @@
-// Adding a test line
+
 import java.io.*;
 import java.util.*;
 
@@ -56,12 +56,25 @@ public class CatalogManagement {
     }
 
     private static void loadCatalog() {
+        File file = new File(FILE_NAME);
+        if (!file.exists()) {
+            System.out.println("Catalog file not found. Creating a new one.");
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                System.out.println("Error creating catalog file: " + e.getMessage());
+            }
+            return;
+        }
+
         try (BufferedReader br = new BufferedReader(new FileReader(FILE_NAME))) {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split(",");
-                if (parts.length == 3) {
-                    catalog.add(new Item(parts[0], parts[1], parts[2]));
+                if (parts.length == 3) { 
+                    catalog.add(new Item(parts[0].trim(), parts[1].trim(), parts[2].trim()));
+                } else {
+                    System.out.println("Skipping invalid line: " + line);
                 }
             }
         } catch (IOException e) {
@@ -83,29 +96,41 @@ public class CatalogManagement {
 
     private static void addItem(Scanner scanner) {
         System.out.print("Enter item ID: ");
-        String id = scanner.nextLine();
+        String id = scanner.nextLine().trim();
 
-        System.out.print("Enter item name: ");
-        String name = scanner.nextLine();
-
-        System.out.print("Enter item description: ");
-        String description = scanner.nextLine();
-
-        if (id.isEmpty() || name.isEmpty() || description.isEmpty()) {
-            System.out.println("All fields are required.");
+        if (catalog.stream().anyMatch(item -> item.id.equals(id))) {
+            System.out.println("An item with this ID already exists. Please use a unique ID.");
             return;
         }
+
+        System.out.print("Enter item name: ");
+        String name = scanner.nextLine().trim();
+
+        System.out.print("Enter item description: ");
+        String description = scanner.nextLine().trim();
 
         catalog.add(new Item(id, name, description));
         System.out.println("Item added successfully.");
     }
 
     private static void editItem(Scanner scanner) {
+        if (catalog.isEmpty()) {
+            System.out.println("The catalog is empty. Nothing to edit.");
+            return;
+        }
+
         viewItems();
 
         System.out.print("Enter the number of the item to edit: ");
-        int index = scanner.nextInt() - 1;
-        scanner.nextLine(); // Consume newline
+        int index;
+        try {
+            index = scanner.nextInt() - 1;
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Please enter a valid number.");
+            scanner.nextLine(); 
+            return;
+        }
+        scanner.nextLine(); 
 
         if (index < 0 || index >= catalog.size()) {
             System.out.println("Invalid item number.");
@@ -115,11 +140,18 @@ public class CatalogManagement {
         Item item = catalog.get(index);
 
         System.out.print("Enter new name (current: " + item.getName() + "): ");
-        String name = scanner.nextLine();
+        String name = scanner.nextLine().trim();
 
         System.out.print("Enter new description (current: " + item.getDescription() + "): ");
-        String description = scanner.nextLine();
+        String description = scanner.nextLine().trim();
 
+       
+        if (name.isEmpty() && description.isEmpty()) {
+            System.out.println("Error: At least one field (Name or Description) must be updated.");
+            return;
+        }
+
+       
         if (!name.isEmpty()) {
             item.setName(name);
         }
